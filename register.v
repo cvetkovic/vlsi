@@ -18,10 +18,10 @@ module register
 	begin
 		data_next <= data_reg;
 	
-		if (load == 1'b1)
-			data_next <= data_in;
-		else if (inc == 1'b1)
+		if (inc == 1'b1)
 			data_next <= data_reg + {{WIDTH-1{1'b0}}, 1'b1};
+		else if (load == 1'b1)
+			data_next <= data_in;
 	end
 	
 	always @(posedge clk, negedge async_nreset)
