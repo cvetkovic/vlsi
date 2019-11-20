@@ -83,6 +83,11 @@ module cpu
 	localparam OC_OUT 	= 4'b0011;
 	localparam OC_TRAP 	= 4'b1111;
 	
+	localparam OC_BRANCH = 4'b0110;
+	localparam OC_JMP		= 4'b0000;
+	localparam OC_JZ		= 4'b0010;
+	localparam OC_JNZ		= 4'b0011;
+	
 	integer j;
 	
 	always @(*)
@@ -163,7 +168,7 @@ module cpu
 				reg_data_in[IR1] <= mem_data_input;
 				reg_ctrl_load[IR1] <= 1'b1;
 			
-				case (mem_data_input[7:4])
+				case (reg_data_out[IR0][7:4])
 				
 					OC_ST:
 					begin
@@ -177,6 +182,45 @@ module cpu
 					begin
 						mem_address_output <= mem_data_input;
 						state_next <= EXECUTE;
+					end
+					
+					OC_BRANCH:
+					begin
+						
+						case (reg_data_out[IR0][3:0])
+						
+							OC_JMP:
+							begin
+								reg_data_in[PC] <= mem_data_input;
+								reg_ctrl_load[PC] <= 1'b1;
+								state_next <= IR0_FETCH;
+							end
+							
+							OC_JZ:
+							begin
+								if (getZ(reg_data_out[PSW]) == 1'b1)
+								begin
+									reg_data_in[PC] <= mem_data_input;
+									reg_ctrl_load[PC] <= 1'b1;
+									state_next <= IR0_FETCH;
+								end
+							end
+							
+							OC_JNZ:
+							begin
+								if (getZ(reg_data_out[PSW]) == 1'b0)
+								begin
+									reg_data_in[PC] <= mem_data_input;
+									reg_ctrl_load[PC] <= 1'b1;
+									state_next <= IR0_FETCH;
+								end
+							end
+							
+							default:
+								state_next <= UNKNOWN_INSTRUCTION;
+							
+						endcase
+						
 					end
 					
 					default:
@@ -254,6 +298,17 @@ module cpu
 			c = carry;
 			
 			calculate_psw = { 4'd0, n, z, c, 1'd0 };
+		end
+	endfunction
+	
+	function automatic getZ;
+		input [7:0] psw;
+		
+		reg [7:0] t;
+		
+		begin
+			t = (psw & 8'b0000_0100) >> 2;
+			getZ = t[0];
 		end
 	endfunction
 	
