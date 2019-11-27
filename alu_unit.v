@@ -7,6 +7,16 @@ module alu_unit
 		input [WIDTH-1:0] b,
 		input operation,
 		
+	/*
+		// no reg example
+		output [(WIDTH - 1) : 0] result,
+		output carry
+	);
+		
+		assign { carry, result } = operation ? (a - b) : (a + b);
+		
+	*/
+		
 		output reg [WIDTH-1:0] sum,
 		output reg carry
 	);
