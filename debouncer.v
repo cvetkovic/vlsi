@@ -6,6 +6,15 @@ module debouncer
 		
 		output reg out
 	);
+
+	reg [1:0] ff_reg, ff_next;
+	reg output_reg, output_next;
+	
+	reg ctrl_load, ctrl_inc;
+	wire [19:0] counter_output;
+	
+	reg count_over;
+	reg difference;
 	
 	// here it is necessary the load operation to have priority over increment 
 	// so that debouncer can function properly
@@ -22,15 +31,6 @@ module debouncer
 		.inc(ctrl_inc),
 		.data_out(counter_output)
 	);
-	
-	reg [1:0] ff_reg, ff_next;
-	reg output_reg, output_next;
-	
-	reg ctrl_load, ctrl_inc;
-	wire [19:0] counter_output;
-	
-	reg count_over;
-	reg difference;
 	
 	always @(*)
 	begin

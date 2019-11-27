@@ -20,9 +20,9 @@ module timer
 			counter_next <= 32'd0;
 		if (enable)
 		begin
-			if (counter_reg < 32'd99_999_999)
-				counter_next <= counter_reg + {{31{1'b1}}, 1'b1};
-			else if (counter_reg == 32'd99_999_999)
+			if (counter_reg < 32'd2)
+				counter_next <= counter_reg + {{31{1'b0}}, 1'b1};
+			else if (counter_reg == 32'd2)
 			begin
 				counter_next <= 32'd0;
 				trigger <= 1'b1;

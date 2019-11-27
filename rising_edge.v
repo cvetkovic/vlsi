@@ -25,7 +25,7 @@ module rising_edge
 	
 	always @(*)
 	begin
-		out <= ~ff_reg[1] & ff_reg[0]
+		out <= ~ff_reg[1] & ff_reg[0];
 	end
 	
 endmodule

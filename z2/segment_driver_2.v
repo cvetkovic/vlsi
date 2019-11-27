@@ -42,7 +42,7 @@ module segment_driver_2
 			endcase
 		end
 		
-		if (next_segment_re && mode_reg != OFF_MODE)
+		if (next_segment_re && (mode_reg != OFF_MODE))
 		begin
 			case (state_reg)
 				STATE_A:
@@ -95,12 +95,15 @@ module segment_driver_2
 	
 	always @(*)
 	begin
-		display <= {2'b0, 
-					state_reg == STATE_F,
-					state_reg == STATE_E,
-					state_reg == STATE_D,
-					state_reg == STATE_C,
-					state_reg == STATE_B,
-					state_reg == STATE_A} && {8{mode_reg != OFF_MODE}};
+		if (mode_reg == OFF_MODE)
+			display <= 8'd0;
+		else
+			display <= {2'b0, 
+						state_reg == STATE_F,
+						state_reg == STATE_E,
+						state_reg == STATE_D,
+						state_reg == STATE_C,
+						state_reg == STATE_B,
+						state_reg == STATE_A};
 	end
 endmodule
