@@ -1,0 +1,1 @@
+to run simulator change timer.v that it fires at three clock cycles
