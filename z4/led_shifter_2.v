@@ -1,46 +1,58 @@
 module led_shifter_2
 	(
 		input clk,
-		input async_reset_debounced,	
+		input async_nreset,
 		
-		input btn_0_re,
-		input btn_1_re,
-		input parity_debounced,
+		input button0_re,
+		input button1_re,
 		
-		output [7:0] led_output,
-		output reg [7:0] segment_output
+		input show_parity_deb,
+		
+		output [7:0] out,
+		output reg [7:0] hex
 	);
 	
-	reg [7:0] led_reg, led_next;
+	reg [7:0] number_reg, number_next;
 	
 	always @(*)
 	begin
-		led_next <= led_reg;
+		number_next <= number_reg;
 		
-		if (btn_0_re == 1'b1)
-			led_next <= led_reg << 1;
-		else if (btn_1_re == 1'b1)
-			led_next <= (led_reg << 1) | 1'b1;
+		if (button0_re)
+			number_next <= (number_reg << 1) || 1'b0;
+		else if (button1_re)
+			number_next <= (number_reg << 1) || 1'b1;
 	end
 	
-	always @(posedge clk, negedge async_reset)
+	always @(posedge clk, negedge async_nreset)
 	begin
-		if (async_reset == 1'b0)
-			led_reg <= 8'd0;
+		if (async_nreset == 1'b0)
+		begin
+			number_reg <= 8'd0;
+		end
 		else
-			led_reg <= led_next;
+		begin
+			number_reg <= number_next;
+		end
 	end
+	
+	assign out = number_reg;
 	
 	always @(*)
 	begin
-	
-		if (parity_debounced == 1'b1)
-			segment_output <= (~^led_reg == 1'b1 ? 8'b0000_0110 : 8'b0011_1111);
-		else
-			segment_output <= 8'd0;
-	
+		
+		hex <= 8'd0;
+		
+		if (show_parity_deb)
+		begin
+			case (~(^number_reg))
+				1'b0:
+					hex <= 8'b0011_1111;
+				1'b1:
+					hex <= 8'b0000_0011;
+			endcase
+		end
+		
 	end
-	
-	assign led_output = led_reg;
 	
 endmodule
