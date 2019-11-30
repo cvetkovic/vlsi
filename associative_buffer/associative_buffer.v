@@ -61,7 +61,7 @@ module associative_buffer
 				);
 		end
 		
-		for (i = 0; i < (2 ** KEY_WIDTH); i = i + 1) begin : gen_block
+		for (i = 0; i < (2 ** KEY_WIDTH); i = i + 1) begin : generate_block
 			register
 				#(
 					.DATA_WIDTH(10)
@@ -94,6 +94,7 @@ module associative_buffer
 	integer j, index, size;
 	always @(*) begin
 		size = 0;
+		index = BUFFER_SIZE;
 		
 		for (j = 0; j < BUFFER_SIZE; j = j + 1) begin
 			data_reg_ctrl[j] = CTRL_NONE;
@@ -106,15 +107,14 @@ module associative_buffer
 		valid_next = valid_reg;
 		
 		for (j = 0; j < BUFFER_SIZE; j = j + 1) begin
-			if (key_reg_output[j][0 +: KEY_WIDTH] == key) begin
+			if (key_reg_output[j][0 +: KEY_WIDTH] == key)
 				index = j;
-			end
 			
 			if (key_reg_output[j][KEY_WIDTH])
 				size = size + 1;
 		end
 		
-		if (j == BUFFER_SIZE) begin
+		if (index == BUFFER_SIZE) begin
 			valid_next = 1'b0;
 			
 			if (size < BUFFER_SIZE) begin

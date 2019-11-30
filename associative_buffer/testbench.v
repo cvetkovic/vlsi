@@ -30,11 +30,13 @@ module testbench;
 		#20
 		key <= 2'b01;
 		data_input <= 4'b1110;
-		ctrl <= 2'b01;				// LOAD (1, E)
+		ctrl <= 2'd2;				// LOAD (1, E)
 		
-		#30
-		key <= 2'b01;
-		ctrl <= 2'b10;				// INCR (1)
+		#40
+		ctrl <= 2'd0;				// NONE
+		
+		#60
+		ctrl <= 2'd3;				// INCR (1)
 	end
 	
 	always @(*) begin
