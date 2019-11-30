@@ -61,7 +61,7 @@ module associative_buffer
 				);
 		end
 		
-		for (i = 0; i < (2 ** KEY_WIDTH); i = i + 1) begin : generate_block
+		for (i = 0; i < (2 ** KEY_WIDTH); i = i + 1) begin : generate_counter
 			register
 				#(
 					.DATA_WIDTH(10)
@@ -77,20 +77,6 @@ module associative_buffer
 		end
 	endgenerate
 	
-	reg valid_reg, valid_next;
-	reg [(DATA_WIDTH - 1) : 0] data_reg, data_next;
-	
-	always @(negedge rst, posedge clk) begin
-		if (!rst) begin
-			valid_reg <= 1'b0;
-			data_reg <= { DATA_WIDTH{1'b0} };
-		end
-		else begin
-			data_reg <= data_next;
-			valid_reg <= valid_next;
-		end
-	end
-	
 	integer j, index, size;
 	always @(*) begin
 		size = 0;
@@ -98,13 +84,14 @@ module associative_buffer
 		
 		for (j = 0; j < BUFFER_SIZE; j = j + 1) begin
 			data_reg_ctrl[j] = CTRL_NONE;
+			data_reg_input[j] = { DATA_WIDTH{1'b0} };
+			
 			key_reg_ctrl[j] = CTRL_NONE;
 			key_reg_input[j] = { (KEY_WIDTH + 1){1'b0} };
-			data_reg_input[j] = { DATA_WIDTH{1'b0} };
 		end
 		
-		data_next = data_reg;
-		valid_next = valid_reg;
+		valid = 1'b0;
+		data_output = { DATA_WIDTH{1'b0} };
 		
 		for (j = 0; j < BUFFER_SIZE; j = j + 1) begin
 			if (key_reg_output[j][0 +: KEY_WIDTH] == key)
@@ -114,27 +101,23 @@ module associative_buffer
 				size = size + 1;
 		end
 		
-		if (index == BUFFER_SIZE) begin
-			valid_next = 1'b0;
+		if (index == BUFFER_SIZE && size < BUFFER_SIZE) begin
+			data_reg_ctrl[size] = ctrl;
+			data_reg_input[size] = data_input;
 			
-			if (size < BUFFER_SIZE) begin
-				data_reg_ctrl[size] = ctrl;
-				data_reg_input[size] = data_input;
-				key_reg_ctrl[size] = CTRL_LOAD;
-				key_reg_input[size] = { 1'b1, key };
-			end
+			key_reg_ctrl[size] = CTRL_LOAD;
+			key_reg_input[size] = { 1'b1, key };
+			
+			data_output = data_reg_output[size];
 		end
 		else begin
 			data_reg_ctrl[index] = ctrl;
 			data_reg_input[index] = data_input;
-			valid_next = key_reg_output[index][KEY_WIDTH];
-			data_next = data_output[index];
+			
+			valid = key_reg_output[index][KEY_WIDTH];
+			
+			data_output = data_reg_output[index];
 		end
-	end
-	
-	always @(*) begin
-		data_output = data_reg;
-		valid = valid_reg;
 	end
 	
 endmodule

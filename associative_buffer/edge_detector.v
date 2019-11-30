@@ -10,6 +10,10 @@ module edge_detector
 		output reg [(SIGNAL_NUM - 1) : 0] signal_output
 	);
 	
+	localparam RISING_EDGE = 0;
+	localparam FALLING_EDGE = 1;
+	localparam BOTH_EDGES = 2;
+	
 	reg [(SIGNAL_NUM - 1) : 0] ff_reg [1 : 0];
 	reg [(SIGNAL_NUM - 1) : 0] ff_next [1 : 0];
 	
@@ -31,11 +35,11 @@ module edge_detector
 	
 	always @(*) begin
 		case (EDGE)
-			2'd0:
+			RISING_EDGE:
 				signal_output = ff_reg[0] & ~ff_reg[1];
-			2'd1:
+			FALLING_EDGE:
 				signal_output = ~ff_reg[0] & ff_reg[1];
-			2'd2:
+			BOTH_EDGES:
 				signal_output = ff_reg[0] ^ ff_reg[1];
 		endcase
 	end
