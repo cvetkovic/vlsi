@@ -144,72 +144,73 @@ module associative_buffer
 					
 					state_next = STATE_READ_ALL;
 				end
-				
-				for (j = 0; j < BUFFER_SIZE; j = j + 1) begin
-					if (key_reg_output[j][0 +: KEY_WIDTH] == key)
-						index = j;
-					
-					if (key_reg_output[j][KEY_WIDTH])
-						size = size + 1;
-				end
-				
-				if (index == BUFFER_SIZE) begin
-					// MISS + NOT FULL
-					if (size < BUFFER_SIZE) begin
-						for (j = 0; j < BUFFER_SIZE; j = j + 1) begin
-							if (key_reg_output[j][KEY_WIDTH])
-								lru_counter_ctrl[j] = CTRL_INCR;
-						end
-					
-						lru_counter_ctrl[size] = CTRL_CLR;
+				else begin
+					for (j = 0; j < BUFFER_SIZE; j = j + 1) begin
+						if (key_reg_output[j][0 +: KEY_WIDTH] == key)
+							index = j;
 						
-						data_reg_ctrl[size] = ctrl;
-						data_reg_input[size] = data_input;
-						
-						key_reg_ctrl[size] = CTRL_LOAD;
-						key_reg_input[size] = { 1'b1, key };
-						
-						data_output = data_reg_output[size];
+						if (key_reg_output[j][KEY_WIDTH])
+							size = size + 1;
 					end
-					// MISS + FULL => LRU
-					else begin
-						for (j = 0; j < BUFFER_SIZE; j = j + 1) begin
-							if (lru_counter_output[j] == BUFFER_SIZE - 1)
-								index = j;
+					
+					if (index == BUFFER_SIZE) begin
+						// MISS + NOT FULL
+						if (size < BUFFER_SIZE) begin
+							for (j = 0; j < BUFFER_SIZE; j = j + 1) begin
+								if (key_reg_output[j][KEY_WIDTH])
+									lru_counter_ctrl[j] = CTRL_INCR;
+							end
+						
+							lru_counter_ctrl[size] = CTRL_CLR;
 							
-							lru_counter_ctrl[j] = CTRL_INCR;
+							data_reg_ctrl[size] = ctrl;
+							data_reg_input[size] = data_input;
+							
+							key_reg_ctrl[size] = CTRL_LOAD;
+							key_reg_input[size] = { 1'b1, key };
+							
+							data_output = data_reg_output[size];
+						end
+						// MISS + FULL => LRU
+						else begin
+							for (j = 0; j < BUFFER_SIZE; j = j + 1) begin
+								if (lru_counter_output[j] == BUFFER_SIZE - 1)
+									index = j;
+								
+								lru_counter_ctrl[j] = CTRL_INCR;
+							end
+							
+							lru_counter_ctrl[index] = CTRL_CLR;
+							
+							data_reg_ctrl[index] = ctrl;
+							data_reg_input[index] = data_input;
+							
+							key_reg_ctrl[index] = CTRL_LOAD;
+							key_reg_input[index] = { 1'b1, key };
+							
+							valid = key_reg_output[index][KEY_WIDTH];
+							data_output = data_reg_output[index];
+						end
+					end
+					else begin
+						// HIT
+						for (j = 0; j < BUFFER_SIZE; j = j + 1) begin
+							if (key_reg_output[j][KEY_WIDTH] && lru_counter_output[j] < lru_counter_output[index])
+								lru_counter_ctrl[j] = CTRL_INCR;
 						end
 						
 						lru_counter_ctrl[index] = CTRL_CLR;
-						
+					
 						data_reg_ctrl[index] = ctrl;
 						data_reg_input[index] = data_input;
 						
-						key_reg_ctrl[index] = CTRL_LOAD;
-						key_reg_input[index] = { 1'b1, key };
+						if (ctrl == CTRL_CLR)
+							key_reg_ctrl[index] = ctrl;
 						
 						valid = key_reg_output[index][KEY_WIDTH];
+						
 						data_output = data_reg_output[index];
 					end
-				end
-				else begin
-					// HIT
-					for (j = 0; j < BUFFER_SIZE; j = j + 1) begin
-						if (key_reg_output[j][KEY_WIDTH] && lru_counter_output[j] < lru_counter_output[index])
-							lru_counter_ctrl[j] = CTRL_INCR;
-					end
-					
-					lru_counter_ctrl[index] = CTRL_CLR;
-				
-					data_reg_ctrl[index] = ctrl;
-					data_reg_input[index] = data_input;
-					
-					if (ctrl == CTRL_CLR)
-						key_reg_ctrl[index] = ctrl;
-					
-					valid = key_reg_output[index][KEY_WIDTH];
-					
-					data_output = data_reg_output[index];
 				end
 			end
 			
