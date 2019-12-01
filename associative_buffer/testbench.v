@@ -16,8 +16,7 @@ module testbench;
 	associative_buffer
 		#(
 			.KEY_WIDTH(2),
-			.DATA_WIDTH(4),
-			.BUFFER_SIZE(4)
+			.DATA_WIDTH(4)
 		)
 	associative_buffer_instance
 		(
