@@ -6,9 +6,7 @@ module parallel_register
 		input clk,
 		input async_nreset,
 		
-		input load,
-		input inc,
-		input clear,
+		input [1:0] ctrl,
 		
 		input [WIDTH-1:0] data_in,
 		output [WIDTH-1:0] data_out
@@ -16,16 +14,23 @@ module parallel_register
 	
 	reg [WIDTH-1:0] data_reg, data_next;
 	
+	localparam NONE = 2'd0;
+	localparam LOAD = 2'd1;
+	localparam INCR = 2'd2;
+	localparam CLR = 2'd3;
+	
 	always @(*)
 	begin
-		data_next <= data_reg;
-		
-		if (load)
-			data_next <= data_in;
-		else if (inc)
-			data_next <= data_reg + {{WIDTH-1{1'b0}}, 1'b1};
-		else if (clear)
-			data_next <= {WIDTH{1'b0}};
+		case (ctrl)
+			LOAD:
+				data_next <= data_in;
+			INCR:
+				data_next <= data_reg + {{WIDTH-1{1'b0}}, 1'b1};
+			CLR:
+				data_next <= {WIDTH{1'b0}};
+			default:
+				data_next <= data_reg;
+		endcase
 	end
 	
 	always @(posedge clk, negedge async_nreset)
