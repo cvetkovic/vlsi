@@ -1,8 +1,8 @@
 module associative_buffer
 	#(
-		DATA_WIDTH = 8,
-		KEY_WIDTH = 4,
-		BUFFER_SIZE = 1
+		parameter DATA_WIDTH,
+		parameter KEY_WIDTH,
+		parameter BUFFER_SIZE
 	)
 	(
 		input clk,
@@ -28,6 +28,10 @@ module associative_buffer
 	reg [1:0] data_register_ctrl [BUFFER_SIZE-1:0];
 	reg [DATA_WIDTH-1:0] data_register_input [BUFFER_SIZE-1:0];
 	wire [DATA_WIDTH-1:0] data_register_output [BUFFER_SIZE-1:0];
+	
+	reg [1:0] lru_register_ctrl [BUFFER_SIZE-1:0];
+	reg [31:0] lru_register_input [BUFFER_SIZE-1:0];
+	wire [31:0] lru_register_output [BUFFER_SIZE-1:0];
 	
 	genvar i;
 	generate
@@ -79,6 +83,21 @@ module associative_buffer
 				.data_out(data_register_output[i])
 			);
 			
+			parallel_register
+			#(
+				.WIDTH(32)
+			)
+			lru_register_i
+			(
+				.clk(clk),
+				.async_nreset(async_nreset),
+				
+				.ctrl(lru_register_ctrl[i]),
+				
+				.data_in(lru_register_input[i]),
+				.data_out(lru_register_output[i])
+			);
+			
 		end
 	endgenerate
 
@@ -88,6 +107,18 @@ module associative_buffer
 	localparam CLR = 2'd3;
 	
 	integer j, size, index;
+	
+	localparam BUFFER_MODE = 1'd0;
+	localparam WRITING_MODE = 1'd1;
+	
+	reg state_reg, state_next;
+	
+	reg [1:0] writing_mode_counter_ctrl;
+	reg [31:0] writing_mode_counter_data_in;
+	wire [31:0] writing_mode_counter_data_output;
+	
+	wire timer_enabled;
+	wire second_elapsed;
 	
 	always @(*)
 	begin
@@ -101,13 +132,16 @@ module associative_buffer
 		for (j = 0; j < BUFFER_SIZE; j = j + 1)
 		begin
 		
-			valid_register_ctrl[size] <= NONE;
-			tag_register_ctrl[size] <= NONE;
-			data_register_ctrl[size] <= NONE;
+			valid_register_ctrl[j] <= NONE;
+			tag_register_ctrl[j] <= NONE;
+			data_register_ctrl[j] <= NONE;
+			lru_register_ctrl[j] <= NONE;
 			
-			valid_register_input[size] <= 1'b0;
-			tag_register_input[size] <= {KEY_WIDTH{1'b0}};
-			data_register_input[size] <= {DATA_WIDTH{1'b0}};
+			valid_register_input[j] <= 1'b0;
+			tag_register_input[j] <= {KEY_WIDTH{1'b0}};
+			data_register_input[j] <= {DATA_WIDTH{1'b0}};
+			lru_register_input[j] <= 32'b0;
+			
 		
 		end
 		
@@ -127,20 +161,64 @@ module associative_buffer
 					size = size + 1;
 			end
 			
-			if ((index == BUFFER_SIZE) && (size < BUFFER_SIZE))
+			if (index == BUFFER_SIZE)
 			begin
+				if (size < BUFFER_SIZE)
+				begin
 			
-				// key not found -> insert new one
-			
-				valid_register_ctrl[size] <= LOAD;
-				tag_register_ctrl[size] <= LOAD;
-				data_register_ctrl[size] <= ctrl;
+					// space available, key not found -> insert new one
 				
-				valid_register_input[size] <= 1'b1;
-				tag_register_input[size] <= key;
-				data_register_input[size] <= data_in;
+					valid_register_ctrl[size] <= LOAD;
+					tag_register_ctrl[size] <= LOAD;
+					data_register_ctrl[size] <= ctrl;
+					lru_register_ctrl[size] <= LOAD;
+					
+					valid_register_input[size] <= 1'b1;
+					tag_register_input[size] <= key;
+					data_register_input[size] <= data_in;
+					lru_register_input[size] <= 1'b0;
+					
+					data_out <= data_register_output[size];
 				
-				data_out <= data_register_output[size];
+					// increment all other elements lru by 1
+					for (j = 0; j < BUFFER_SIZE; j = j + 1)
+					begin
+						if (j != size)
+							lru_register_ctrl[j] <= INCR;
+					end
+				end
+				else 
+				begin
+				
+					// no space available, key not found -> remove lru, insert new one
+				
+					// find LRU
+					for (j = 0; j < BUFFER_SIZE; j = j + 1)
+					begin
+						if (lru_register_output[j] == BUFFER_SIZE - 1)
+							index = j;
+					end
+					
+					valid_register_ctrl[index] <= LOAD;
+					tag_register_ctrl[index] <= LOAD;
+					data_register_ctrl[index] <= ctrl;
+					lru_register_ctrl[index] <= LOAD;
+					
+					valid_register_input[index] <= 1'b1;
+					tag_register_input[index] <= key;
+					data_register_input[index] <= data_in;
+					lru_register_input[index] <= 1'b0;
+					
+					data_out <= data_register_output[index];
+				
+					// increment all other elements lru by 1
+					for (j = 0; j < BUFFER_SIZE; j = j + 1)
+					begin
+						if (j != index)
+							lru_register_ctrl[j] <= INCR;
+					end
+				
+				end
 				
 			end
 			else
@@ -156,9 +234,17 @@ module associative_buffer
 			
 				data_register_ctrl[index] <= ctrl;
 				data_register_input[index] <= data_in;
+				lru_register_ctrl[index] <= INCR;
 				
 				valid <= valid_register_output[index];
 				data_out <= data_register_output[index];
+			
+				// increment all other elements lru by 1
+				for (j = 0; j < BUFFER_SIZE; j = j + 1)
+				begin
+					if (j != index)
+						lru_register_ctrl[j] <= INCR;
+				end
 			
 			end
 		end
@@ -177,11 +263,6 @@ module associative_buffer
 	
 	end
 	
-	localparam BUFFER_MODE = 1'd0;
-	localparam WRITING_MODE = 1'd1;
-	
-	reg state_reg, state_next;
-	
 	parallel_register
 	#(
 		.WIDTH(32)
@@ -197,10 +278,6 @@ module associative_buffer
 		.data_out(writing_mode_counter_data_output)
 	);
 	
-	reg [1:0] writing_mode_counter_ctrl;
-	reg [31:0] writing_mode_counter_data_in;
-	wire [31:0] writing_mode_counter_data_output;
-	
 	timer timer_inst
 	(
 		.clk(clk),
@@ -211,9 +288,6 @@ module associative_buffer
 		.second_elapsed(second_elapsed)
 	);
 	
-	wire timer_enabled;
-	wire second_elapsed;
-	
 	assign timer_enabled = (state_reg == WRITING_MODE);
 		
 	always @(posedge clk, negedge async_nreset)
@@ -223,7 +297,5 @@ module associative_buffer
 		else
 			state_reg <= state_next;
 	end
-	
-	
 	
 endmodule
