@@ -1,7 +1,7 @@
 module edge_detector
 	#(
-		WIDTH = 2,
-		EDGE = RISING_EDGE
+		parameter WIDTH,
+		parameter EDGE
 	)
 	(
 		input clk,
