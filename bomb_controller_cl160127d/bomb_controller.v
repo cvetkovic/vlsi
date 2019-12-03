@@ -90,6 +90,7 @@ module bomb_controller
 	localparam KEY_A = 2'd0;
 	localparam KEY_B = 2'd1;
 	localparam KEY_C = 2'd2;
+	localparam KEY_NONE = 2'd3;
 	
 	always @(*)
 	begin
@@ -316,8 +317,8 @@ module bomb_controller
 			
 			for (j = 0; j < 8; j = j + 1)
 			begin
-				password_reg[j] <= 2'd0;
-				guest_reg[j] <= 2'd0;
+				password_reg[j] <= KEY_NONE;
+				guest_reg[j] <= KEY_NONE;
 			end
 		end
 		else
