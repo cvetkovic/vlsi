@@ -190,6 +190,7 @@ module strange_device
 							size_ctrl = CTRL_INCR;
 						
 						encoder_input = digit;
+						indicator_next = INDICATOR_ON;
 					end
 				end
 				else if (digit_change) begin
