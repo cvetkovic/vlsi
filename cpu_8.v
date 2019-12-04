@@ -264,9 +264,6 @@ module cpu
 						reg_ctrl_load[PSW] <= 1'b1;
 					end
 					
-					default:
-						state_next <= UNKNOWN_INSTRUCTION;
-					
 				endcase
 			
 			end
