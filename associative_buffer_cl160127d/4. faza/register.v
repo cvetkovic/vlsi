@@ -1,6 +1,6 @@
-module parallel_register
+module register
 	#(
-		parameter WIDTH = 8
+		WIDTH = 8
 	)
 	(
 		input clk,
