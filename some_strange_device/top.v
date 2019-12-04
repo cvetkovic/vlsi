@@ -12,7 +12,7 @@ module top
 		input digit_load,
 		input digit_change,
 		input mode_change,
-		output reg [((ENCODING_WIDTH + 1) * DEVICE_NUM - 1) : 0] displays_flattened,
+		output reg [((7 + 1) * 4 - 1) : 0] displays_flattened,
 		output digit_load_indicator
 	);
 	
@@ -58,7 +58,7 @@ module top
 	
 	reg dots [(DEVICE_NUM - 1) : 0];
 	
-	always @(*) begin
+	always @(*) begin : flattening
 		integer j;
 		for (j = 0; j < DEVICE_NUM; j = j + 1) begin
 			displays_flattened[(j * (ENCODING_WIDTH + 1)) +: (ENCODING_WIDTH + 1)] = { dots[j], displays[j] };
@@ -104,7 +104,7 @@ module top
 		end
 	end
 	
-	always @(*) begin
+	always @(*) begin : combinational
 		integer j, same;
 		for (j = 0; j < DEVICE_NUM; j = j + 1) begin
 			digit_choices[j] = { DIGIT_NUM{1'b0} };
@@ -118,13 +118,16 @@ module top
 		history_mode_next = history_mode_reg;
 		
 		case (state_reg)
-			STATE_RUNNING: begin : running_block
+			STATE_RUNNING: begin
 				same = 1;
+				dots[device_choice] = 1'b0;
 				
-				for (j = 1; j < DEVICE_NUM; j = j + 1) begin
-					if (displays[j] != displays[0]) begin
-						same = 0;
-						disable running_block;
+				begin : break
+					for (j = 1; j < DEVICE_NUM; j = j + 1) begin
+						if (displays[j] != displays[0]) begin
+							same = 0;
+							disable break;
+						end
 					end
 				end
 				
@@ -136,7 +139,6 @@ module top
 					digit_loads[device_choice] = digit_load_red;
 					digit_changes[device_choice] = digit_change_red;
 					mode_changes[device_choice] = mode_change_red;
-					dots[device_choice] = 1'b0;
 					
 					if (mode_change)
 						history_mode_next[device_choice] = ~history_mode_reg[device_choice];

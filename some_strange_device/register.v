@@ -5,7 +5,7 @@ module register
 	(
 		input rst,
 		input clk,
-		input [(CTRL_WIDTH - 1) : 0] ctrl,
+		input [(3 - 1) : 0] ctrl,
 		input [(DATA_WIDTH - 1) : 0] data_input,
 		output [(DATA_WIDTH - 1) : 0] data_output
 	);

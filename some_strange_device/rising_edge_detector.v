@@ -6,8 +6,7 @@ module rising_edge_detector
 		output signal_output
 	);
 	
-	reg  [1 : 0] ff_reg;
-	wire [1 : 0] ff_next;
+	reg [1 : 0] ff_reg, ff_next;
 	
 	always @(negedge rst, posedge clk) begin
 		if (!rst)
@@ -16,7 +15,9 @@ module rising_edge_detector
 			ff_reg <= ff_next;
 	end
 	
-	assign ff_next = { ff_reg[0], signal_input };
+	always @(*) begin
+		ff_next = { ff_reg[0], signal_input };
+	end
 	
 	assign signal_output = ff_reg[0] & ~ff_reg[1];
 	
