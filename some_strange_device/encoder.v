@@ -1,7 +1,7 @@
 module encoder
 	(
-		input [(DIGIT_WIDTH - 1) : 0] digit,
-		output reg [(ENCODING_WIDTH - 1) : 0] encoding
+		input [(4 - 1) : 0] digit,
+		output reg [(7 - 1) : 0] encoding
 	);
 	
 	localparam DIGIT_WIDTH = 4;

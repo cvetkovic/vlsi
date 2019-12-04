@@ -224,9 +224,9 @@ inout	[31:0]	GPIO1_D;				//	GPIO Connection 1 Data Bus
 			.clk(CLOCK_50),
 			.device_choice(SW[2 : 1]),
 			.digit_choice(SW[9 : 3]),
-			.digit_load(BUTTON[2]),
-			.digit_change(BUTTON[1]),
-			.mode_change(BUTTON[0]),
+			.digit_load(~BUTTON[2]),
+			.digit_change(~BUTTON[1]),
+			.mode_change(~BUTTON[0]),
 			.displays_flattened(displays_flattened),
 			.digit_load_indicator(LEDG[0])
 		);
@@ -235,5 +235,26 @@ inout	[31:0]	GPIO1_D;				//	GPIO Connection 1 Data Bus
 	assign { HEX1_DP, HEX1_D } = displays_flattened[8 +: 8];
 	assign { HEX2_DP, HEX2_D } = displays_flattened[16 +: 8];
 	assign { HEX3_DP, HEX3_D } = displays_flattened[24 +: 8];
-
+	
+	/* strange_top
+		#(
+			.DIGIT_NUM(7),
+			.HISTORY_WIDTH(4)
+		)
+	strange_top_instance
+		(
+			.rst(SW[0]),
+			.clk(CLOCK_50),
+			.digit_choice(SW[9 : 3]),
+			.digit_load(~BUTTON[2]),
+			.digit_change(~BUTTON[1]),
+			.mode_change(~BUTTON[0]),
+			.display(HEX0_D),
+			.digit_load_indicator(LEDG[0])
+		);
+	
+	assign { HEX1_DP, HEX1_D } = 8'hFF;
+	assign { HEX2_DP, HEX2_D } = 8'hFF;
+	assign { HEX3_DP, HEX3_D } = 8'hFF; */
+		
 endmodule

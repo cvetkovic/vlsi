@@ -10,7 +10,7 @@ module strange_device
 		input digit_load,
 		input digit_change,
 		input mode_change,
-		output reg [(ENCODING_WIDTH - 1) : 0] display,
+		output reg [(7 - 1) : 0] display,
 		output digit_load_indicator
 	);
 	
@@ -80,8 +80,8 @@ module strange_device
 	
 	localparam TIMER_WIDTH = 28;
 	
-	localparam TICK_1000_MS = 28'd2;
-	// localparam TICK_1000_MS = 28'd50_000_000;
+	// localparam TICK_1000_MS = 28'd2;
+	localparam TICK_1000_MS = 28'd50_000_000;
 	
 	reg [(CTRL_WIDTH - 1) : 0] timer_ctrl;
 	wire [(TIMER_WIDTH - 1) : 0] timer_output;
@@ -182,7 +182,7 @@ module strange_device
 				else if (digit_load) begin
 					if (|digit_choice) begin
 						history_ctrl = CTRL_LOAD;
-						history_input = { history_output[DIGIT_WIDTH +: ((HISTORY_LENGTH - 1) * DIGIT_WIDTH)], digit };
+						history_input = { history_output[0 +: ((HISTORY_LENGTH - 1) * DIGIT_WIDTH)], digit };
 						
 						index_ctrl = CTRL_CLR;
 						
@@ -210,7 +210,7 @@ module strange_device
 				end
 				else begin
 					if (timer_output == TICK_1000_MS) begin
-						if (index_output == size_output)
+						if (index_output < HISTORY_LENGTH - 1 && index_output == size_output - 1)
 							index_ctrl = CTRL_CLR;
 						else
 							index_ctrl = CTRL_INCR;
