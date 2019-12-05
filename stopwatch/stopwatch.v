@@ -187,8 +187,10 @@ module stopwatch
 						counter_ctrl = CTRL_INCR;
 				end
 				
-				if (stop)
+				if (stop) begin
+					counter_ctrl = CTRL_CLR;
 					state_next = STATE_STOPPED;
+				end
 			end
 		endcase
 	end
