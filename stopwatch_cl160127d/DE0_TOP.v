@@ -207,14 +207,20 @@ module DE0_TOP
 	//=======================================================
 	//  Structural coding
 	//=======================================================
-	cpu_top cpu_inst
-		(
-			.clk(CLOCK_50),
-			.async_nreset(BUTTON[2]),
-			
-			.exit_trap(~BUTTON[1]),
-			
-			.io_input(SW[7:0]),
-			.io_output(LEDG[7:0])
-		);
+
+	stopwatch_top stopwatch_top_inst
+	(
+		.clk(CLOCK_50),
+		.async_nreset(SW[0]),
+		
+		.start(~BUTTON[2]),
+		.pause(~BUTTON[1]),
+		.stop(~BUTTON[0]),
+		
+		.hex0({HEX0_DP, HEX0_D}),
+		.hex1({HEX1_DP, HEX1_D}),
+		.hex2({HEX2_DP, HEX2_D}),
+		.hex3({HEX3_DP, HEX3_D})
+	);
+	
 endmodule

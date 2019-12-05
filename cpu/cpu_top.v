@@ -1,7 +1,7 @@
 module cpu_top
 	(
 		input clk,
-		input reset,
+		input async_nreset,
 		
 		input exit_trap,
 		
@@ -11,7 +11,6 @@ module cpu_top
 	
 	wire exit_trap_re;
 	wire [7:0] cpu_io_data_out;
-	wire async_nreset;
 	
 	rising_edge rising_edge_exit_trap
 	(
@@ -20,15 +19,6 @@ module cpu_top
 		
 		.in(exit_trap),
 		.out(exit_trap_re)
-	);
-	
-	rising_edge rising_edge_async_nreset
-	(
-		.clk(clk),
-		.async_nreset(async_nreset),
-		
-		.in(reset),
-		.out(async_nreset)
 	);
 	
 	wire [7:0] cpu_io_output;

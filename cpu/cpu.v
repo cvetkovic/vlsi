@@ -27,11 +27,11 @@ module cpu
 	reg [7:0] register_in [4:0];
 	wire [7:0] register_out [4:0];
 	
-	localparam ACC = 2'd0;
-	localparam PC = 2'd1;
-	localparam IR0 = 2'd2;
-	localparam IR1 = 2'd3;
-	localparam PSW = 2'd4;
+	localparam ACC = 0;
+	localparam PC = 1;
+	localparam IR0 = 2;
+	localparam IR1 = 3;
+	localparam PSW = 4;
 	
 	localparam INSTR_LD = 4'b0000;
 	localparam INSTR_ST = 4'b0001;
@@ -132,7 +132,7 @@ module cpu
 			end
 			IR0_DECODE:
 			begin
-				case (mem_data_in[7:4])
+				case (register_out[IR0][7:4])
 					INSTR_LD, INSTR_ST, INSTR_ADD, INSTR_SUB, INSTR_JZ, INSTR_JNZ, INSTR_JMP:
 					begin
 						mem_addr_out <= register_out[PC];
@@ -209,7 +209,7 @@ module cpu
 					
 					INSTR_LD, INSTR_ADD, INSTR_SUB:
 					begin
-						mem_addr_out <= register_out[PC];
+						mem_addr_out <= register_out[IR1];
 						state_next <= EXECUTE;
 					end
 					
@@ -218,28 +218,11 @@ module cpu
 			EXECUTE:
 			begin
 				case (register_out[IR0][7:4])
-					INSTR_ADD:
+					INSTR_ADD, INSTR_SUB:
 					begin	
 						alu_a <= register_out[ACC];
 						alu_b <= mem_data_in;
-						alu_op <= 1'b0;
-						
-						register_in[ACC] <= alu_res;
-						register_ctrl[ACC] <= 1'b1;
-						
-						if (alu_res == 8'd0)
-							register_in[PSW][PSW_ZERO] <= 1'b1;
-						else
-							register_in[PSW][PSW_ZERO] <= 1'b0;
-						register_ctrl[PSW] <= LOAD;
-						
-						state_next <= IR0_FETCH;
-					end
-					INSTR_SUB:
-					begin
-						alu_a <= register_out[ACC];
-						alu_b <= mem_data_in;
-						alu_op <= 1'b1;
+						alu_op <= (register_out[IR0][7:4] == INSTR_ADD ? 1'b0 : 1'b1);
 						
 						register_in[ACC] <= alu_res;
 						register_ctrl[ACC] <= 1'b1;
