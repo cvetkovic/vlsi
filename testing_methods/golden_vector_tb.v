@@ -38,55 +38,47 @@ module golden_vector_tb;
 	
 	initial
 	begin
-	
 		clk = 1'b1;
 		
-		forever
-		begin
-		
+		forever begin
 			if (clk == 1'b1)
 				#(clk_period * clk_duty_cycle) clk = ~clk;
 			else
 				#(clk_period * (1 - clk_duty_cycle)) clk = ~clk;
-		
 		end
-	
 	end
 	
 	initial
 	begin
-	
+		
 		async_nreset = 1'b0;
 		#(clk_period * 2.5);
 		async_nreset = 1'b1;
 		
 		@(posedge clk);
 		#(clk_period / 2);
-		parallel_data_input = 8'b0000_1111;
+		parallel_data_input = 8'b1100_0011;
 		ctrl = PARALLEL_LOAD;
 		
 		@(posedge clk);
 		#(clk_period / 4);
-		$display("At time %d 'data_output' has value %b", $time, data_output);
-		if (data_output != 8'b0000_1111)
-			$display("Output differs from the expected one");
-		$stop;
+		if (data_output != 8'b1100_0011) begin
+			$display("Verification failed at time %d for value 'data_output' value %b.", $time, data_output);
+			$stop;
+		end
 		#(clk_period / 4);
 		serial_data_input = 1'b1;
 		ctrl = SERIAL_MSB_LOAD;
 		
 		@(posedge clk);
 		#(clk_period / 4);
-		$display("At time %d 'data_output' has value %b", $time, data_output);
-		if (data_output != 8'b1000_0111)
-			$display("Output differs from the expected one");
-		#(clk_period / 4);
+		if (data_output != 8'b1110_0001) begin
+			$display("Verification failed at time %d for value 'data_output' value %b.", $time, data_output);
+			$stop;
+		end
+		
 		$stop;
 		
-		@(posedge clk);
-		#(clk_period / 2);
-		$stop;
-	
 	end
 	
 endmodule

@@ -38,22 +38,21 @@ module predictive_tb;
 	
 	initial
 	begin
-	
 		clk = 1'b1;
+		
 		forever begin
 			if (clk == 1'b1)
 				#(clk_period * clk_duty_cycle) clk = ~clk;
 			else
 				#(clk_period * (1 - clk_duty_cycle)) clk = ~clk;
 		end
-		
 	end
 	
-	reg [7:0] expected_data_output;
-	localparam NUMBER_OF_ITERATIONS = 1000;
-	event calculate_prediction;
-	
 	integer i;
+	localparam NUMBER_OF_ITERATIONS = 100;
+	
+	reg [7:0] prediction;
+	event make_prediction;
 	
 	initial
 	begin
@@ -63,69 +62,76 @@ module predictive_tb;
 		async_nreset = 1'b1;
 		
 		@(posedge clk);
-		#(clk_period / 4);
-		ctrl = $random;
+		#(clk_period / 2);
 		parallel_data_input = $random;
 		serial_data_input = $random;
-		->calculate_prediction;
+		ctrl = $random;
+		->make_prediction;
 		
 		for (i = 0; i < NUMBER_OF_ITERATIONS; i = i + 1)
 		begin
+		
 			@(posedge clk);
 			#(clk_period / 4);
-			if (data_output != expected_data_output) begin
-				$display("Data output differs from the expected value.");
+			if (data_output != prediction) begin
+				$display("Verification failed for [pdi, sdi, ctrl] = [%b, %b, %b] at time %d", parallel_data_input, serial_data_input, ctrl, $time);
 				$stop;
 			end
 			#(clk_period / 4);
-			ctrl = $random;
+			
 			parallel_data_input = $random;
 			serial_data_input = $random;
-			->calculate_prediction;
-		end
+			ctrl = $random;
+			->make_prediction;		
 		
+		end
+	
 		@(posedge clk);
 		#(clk_period / 2);
-		$done;
+		
+		$stop;
 	
 	end
 	
-	task automatic calculate_output
+	task automatic calculate_prediction
 		(
-			input [2:0] ctrl,
+			input [7:0] parallel_data_input,
 			input serial_data_input,
-			input [7:0] parallel_data_input
+			input [2:0] ctrl
 		);
+		
 		begin
-			
+		
 			case (ctrl)
-				CLR:
-					expected_data_output = 8'd0;
-				PARALLEL_LOAD:
-					expected_data_output = parallel_data_input;
-				SERIAL_MSB_LOAD:
-					expected_data_output = {serial_data_input, expected_data_output[7:1]};
-				SERIAL_LSB_LOAD:
-					expected_data_output = {expected_data_output[6:0], serial_data_input};
-				SHIFT_LOGICAL_LEFT:
-					expected_data_output = {expected_data_output[6:0], 1'b0};
-				SHIFT_LOGICAL_RIGHT:
-					expected_data_output = {1'b0, expected_data_output[7:1]};
-				default:
-				begin
-				
-				end
-			endcase
 			
+				default: begin
+					// keep previous values
+				end
+				CLR:
+					prediction = 8'd0;
+				PARALLEL_LOAD:
+					prediction = parallel_data_input;
+				SERIAL_MSB_LOAD:
+					prediction = {serial_data_input, prediction[7:1]};
+				SERIAL_LSB_LOAD:
+					prediction = {prediction[6:0], serial_data_input};
+				SHIFT_LOGICAL_LEFT:
+					prediction = {prediction[6:0], 1'b0};
+				SHIFT_LOGICAL_RIGHT:
+					prediction = {1'b0, prediction[7:1]};
+					
+			endcase
+		
 		end
+		
 	endtask
 	
 	initial
 	begin
-		expected_data_output = 8'd0;
+		prediction = 8'd0;
 		forever begin
-			@(calculate_prediction);
-			calculate_output(ctrl, serial_data_input, parallel_data_input);
+			@(make_prediction);
+			calculate_prediction(parallel_data_input, serial_data_input, ctrl);
 		end
 	end
 	

@@ -38,19 +38,14 @@ module waveform_tb;
 	
 	initial
 	begin
-	
 		clk = 1'b1;
 		
-		forever
-		begin
-		
+		forever begin
 			if (clk == 1'b1)
 				#(clk_period * clk_duty_cycle) clk = ~clk;
 			else
 				#(clk_period * (1 - clk_duty_cycle)) clk = ~clk;
-		
 		end
-	
 	end
 	
 	initial
@@ -62,7 +57,7 @@ module waveform_tb;
 		
 		@(posedge clk);
 		#(clk_period / 2);
-		parallel_data_input = 8'b1111_0000;
+		parallel_data_input = 8'b1100_0011;
 		ctrl = PARALLEL_LOAD;
 		
 		@(posedge clk);
@@ -73,7 +68,7 @@ module waveform_tb;
 		@(posedge clk);
 		#(clk_period / 2);
 		
-		$stop();
+		$stop;
 	
 	end
 	
