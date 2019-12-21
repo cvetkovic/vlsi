@@ -36,7 +36,7 @@ module rmodule
 		
 	end
 	
-	always @(posedge clk)
+	always @(posedge clk, negedge async_nreset)
 	begin
 		if (!async_nreset)
 		begin
